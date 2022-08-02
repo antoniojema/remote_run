@@ -1,0 +1,4 @@
+*.txt
+*.dat
+*.json
+default_stdout/
