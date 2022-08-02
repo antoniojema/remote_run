@@ -2,3 +2,4 @@
 *.dat
 *.json
 default_stdout/
+__pycache__/
