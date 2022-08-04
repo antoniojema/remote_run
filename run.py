@@ -10,6 +10,14 @@ def printFlush(*args, **kwargs) -> None:
     print(*args, **kwargs, flush=True)
 
 
+def printProcessInfo(p : dict) -> None:
+    print(f"    - Command: {p['command']}")
+    print(f"    - CWD: {    p['cwd']    }")
+    print(f"    - stdout: { p['stdout'] }")
+    print(f"    - PID: {    p['pid']    }")
+    print(f"    - ID : {    p['id']     }", flush=True)
+
+
 def readJSON() -> Tuple[list, bool]:
     global __RUN_PATH__
     try:
@@ -90,11 +98,7 @@ def appendRun(comm : list, cwd : Path, stdout : Path) -> None:
     })
 
     print("New process:")
-    print(f"    - Command: {comm}")
-    print(f"    - CWD: {cwd}")
-    print(f"    - stdout: {stdout}")
-    print(f"    - PID: {pid}")
-    print(f"    - ID : {__CURRENT_ID__}", flush=True)
+    printProcessInfo(__RUN_LIST__[-1])
 
     __CURRENT_ID__ += 1
 
@@ -121,27 +125,23 @@ def killProcess(c : dict) -> None:
     if "pid" in c:
         which = "pid"
         value = c[which]
-        index = getRunByPID(value)
+        i = getRunByPID(value)
     elif "id" in c:
         which = "id"
         value = c[which]
-        index = getRunByID(value)
+        i = getRunByID(value)
     else:
         printFlush("Error killing process: Need to specify PID or ID")
         return
     
-    if index == -1:
+    if i == -1:
         printFlush(f"Error: Could not find process with {which} {value}")
         return
     
     try:
         print("Killing process:")
-        print(f"    - Command: {__RUN_LIST__[index]['command']}")
-        print(f"    - CWD: {__RUN_LIST__[index]['cwd']}")
-        print(f"    - stdout: {__RUN_LIST__[index]['stdout']}")
-        print(f"    - PID: {__RUN_LIST__[index]['pid']}")
-        print(f"    - ID : {__RUN_LIST__[index]['id']}", flush=True)
-        __RUN_LIST__[index]["process"].kill()
+        printProcessInfo(__RUN_LIST__[i])
+        __RUN_LIST__[i]["process"].kill()
     except KeyboardInterrupt as e:
         print(e)
         exit(1)
@@ -160,11 +160,7 @@ def showRunningProcesses() -> None:
         printFlush("No processes running.")
     for i, run in enumerate(__RUN_LIST__):
         print(f"Process {i}:")
-        print(f"    - Command: {run['command']}")
-        print(f"    - CWD: {run['cwd']}")
-        print(f"    - stdout: {run['stdout']}")
-        print(f"    - PID: {run['pid']}")
-        print(f"    - ID : {run['id']}", flush=True)
+        printProcessInfo(run)
 
 
 def runInternalCommand(c : dict) -> bool:
@@ -189,7 +185,10 @@ def cleanRuns() -> None:
     i = 0
     while i < len(__RUN_LIST__):
         run = __RUN_LIST__[i]
-        if run["process"].poll() is not None:
+        exit_code = run["process"].poll()
+        if exit_code is not None:
+            print(f"Process has ended with exit code {exit_code}:")
+            printProcessInfo(__RUN_LIST__[i])
             __RUN_LIST__.pop(i)
         else:
             i += 1
