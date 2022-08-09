@@ -2,8 +2,13 @@ import time, json, os
 from subprocess import Popen
 from pathlib import Path
 from typing import Tuple, Optional
+from datetime import datetime as dt
 
 from common import __CURRENT_ID__, __RUN_LIST__, __RUN_PATH__
+
+
+def datetime():
+    return dt.now().strftime(r"%Y-%b-%d %H:%M:%S")
 
 
 def printFlush(*args, **kwargs) -> None:
@@ -31,7 +36,7 @@ def readJSON() -> Tuple[list, bool]:
         printFlush(e)
         exit(1)
     except Exception as e:
-        printFlush(f"Exception reading JSON:\n{e}")
+        printFlush(f"[{datetime()}] Exception reading JSON:\n{e}")
         return list(), False
 
 
@@ -97,7 +102,7 @@ def appendRun(comm : list, cwd : Path, stdout : Path) -> None:
         "id" : __CURRENT_ID__,
     })
 
-    print("New process:")
+    print(f"[{datetime()}] New process:")
     printProcessInfo(__RUN_LIST__[-1])
 
     __CURRENT_ID__ += 1
@@ -131,22 +136,22 @@ def killProcess(c : dict) -> None:
         value = c[which]
         i = getRunByID(value)
     else:
-        printFlush("Error killing process: Need to specify PID or ID")
+        printFlush(f"[{datetime()}] Error killing process: Need to specify PID or ID")
         return
     
     if i == -1:
-        printFlush(f"Error: Could not find process with {which} {value}")
+        printFlush(f"[{datetime()}] Error: Could not find process with {which} {value}")
         return
     
     try:
-        print("Killing process:")
+        print(f"[{datetime()}] Killing process:")
         printProcessInfo(__RUN_LIST__[i])
         __RUN_LIST__[i]["process"].kill()
     except KeyboardInterrupt as e:
         print(e)
         exit(1)
     except Exception as e:
-        print(f"Error killing proccess with with {which} {value}:\n{e}")
+        print(f"[{datetime()}] Error killing proccess with with {which} {value}:\n{e}")
 
 
 def showRunningProcesses() -> None:
@@ -154,7 +159,7 @@ def showRunningProcesses() -> None:
 
     cleanRuns()
 
-    print("Show processes: ")
+    print(f"[{datetime()}] Show processes: ")
 
     if len(__RUN_LIST__) == 0:
         printFlush("No processes running.")
@@ -167,7 +172,7 @@ def runInternalCommand(c : dict) -> bool:
     reset : bool = False
     comm_name = c["internal_command"]
     if not type(comm_name) is str:
-        printFlush("Error: Internal command must be a string.")
+        printFlush(f"[{datetime()}] Error: Internal command must be a string.")
         return False
 
     if comm_name == "kill":
@@ -175,9 +180,10 @@ def runInternalCommand(c : dict) -> bool:
     elif comm_name == "show running":
         showRunningProcesses()
     elif comm_name == "reset":
+        print(f"[{datetime()}] Resetting...")
         reset = True
     else:
-        printFlush(f"Error: Unknown internal command: {comm_name}")
+        printFlush(f"[{datetime()}] Error: Unknown internal command: {comm_name}")
     return reset
 
 
@@ -187,7 +193,7 @@ def cleanRuns() -> None:
         run = __RUN_LIST__[i]
         exit_code = run["process"].poll()
         if exit_code is not None:
-            print(f"Process has ended with exit code {exit_code}:")
+            print(f"[{datetime()}] Process has ended with exit code {exit_code}:")
             printProcessInfo(__RUN_LIST__[i])
             __RUN_LIST__.pop(i)
         else:
@@ -209,7 +215,7 @@ def runCommands(data : list) -> bool:
             printFlush(e)
             exit(1)
         except Exception as e:
-            printFlush(f"Error reading command:\n{e}")
+            printFlush(f"[{datetime()}] Error reading command:\n{e}")
     return reset
 
 

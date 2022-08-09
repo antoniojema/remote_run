@@ -1,5 +1,6 @@
 *.txt
 *.dat
 *.json
+*.bat
 default_stdout/
 __pycache__/
