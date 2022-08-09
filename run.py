@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Tuple, Optional
 from datetime import datetime as dt
 
-from common import __CURRENT_ID__, __RUN_LIST__, __RUN_PATH__
+from common import __RUN_LIST__, __RUN_PATH__
 
 
 def datetime():
@@ -16,11 +16,11 @@ def printFlush(*args, **kwargs) -> None:
 
 
 def printProcessInfo(p : dict) -> None:
-    print(f"    - Command: {p['command']}")
-    print(f"    - CWD: {    p['cwd']    }")
-    print(f"    - stdout: { p['stdout'] }")
-    print(f"    - PID: {    p['pid']    }")
-    print(f"    - ID : {    p['id']     }", flush=True)
+    print(f"    - Command: { p['command'] }")
+    print(f"    - CWD: {     p['cwd']     }")
+    print(f"    - stdout: {  p['stdout']  }")
+    print(f"    - PID: {     p['pid']     }")
+    print(f"    - Begun at: {p['datetime']}", flush=True)
 
 
 def readJSON() -> Tuple[list, bool]:
@@ -82,7 +82,7 @@ def getStdout(file_str : Optional[str]) -> Path:
 
 
 def appendRun(comm : list, cwd : Path, stdout : Path) -> None:
-    global __RUN_LIST__, __CURRENT_ID__
+    global __RUN_LIST__
 
     f_stdout = open(stdout, "w")
     proc = Popen(
@@ -99,27 +99,18 @@ def appendRun(comm : list, cwd : Path, stdout : Path) -> None:
         "process": proc,
         "stdout" : stdout,
         "pid" : pid,
-        "id" : __CURRENT_ID__,
+        "datetime" : datetime(),
     })
 
     print(f"[{datetime()}] New process:")
     printProcessInfo(__RUN_LIST__[-1])
 
-    __CURRENT_ID__ += 1
 
 
 def getRunByPID(pid : int) -> int:
     global __RUN_LIST__
     for i, run in enumerate(__RUN_LIST__):
         if run["pid"] == pid:
-            return i
-    return -1
-
-
-def getRunByID(id : int):
-    global __RUN_LIST__
-    for i, run in enumerate(__RUN_LIST__):
-        if run["id"] == id:
             return i
     return -1
 
@@ -131,10 +122,6 @@ def killProcess(c : dict) -> None:
         which = "pid"
         value = c[which]
         i = getRunByPID(value)
-    elif "id" in c:
-        which = "id"
-        value = c[which]
-        i = getRunByID(value)
     else:
         printFlush(f"[{datetime()}] Error killing process: Need to specify PID or ID")
         return
